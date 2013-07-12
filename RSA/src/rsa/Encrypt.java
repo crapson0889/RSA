@@ -55,15 +55,19 @@ public class Encrypt {
             FileOutputStream out = new FileOutputStream(outputFile);
             
             //Current source bytes
-            byte[] b = new byte[3];
+            int[] b = new int[3];
             //Encrypted bytes
-            byte[] eb = new byte[3];
+            int[] eb = new int[3];
             //Count bytes in case number of bytes in file is 
             int byteCount;
             
+            /*p = 61;
+            q = 53;
+            d = 2753;*/
+            
             if(crt)
             {
-                CRTPrecompile(p, q, d);
+                CRTPrecompile(p, q, e, d);
             }
             
             //Read File character By character
@@ -73,7 +77,7 @@ public class Encrypt {
                 {
                     if(in.available() != 0)
                     {
-                        b[i] = in.readByte();
+                        b[i] = in.readUnsignedByte();
                         byteCount++;
                     }
                     else
@@ -86,7 +90,7 @@ public class Encrypt {
                 {
                     if(crt)
                     {
-                        
+                        eb = CRTEncrypt(b, p, q, n, e, d);
                     }
                     else
                     {
@@ -107,8 +111,10 @@ public class Encrypt {
                 
                 for(int i = 0; i < byteCount; i++)
                 {
-                    out.write(eb[i]);
+                    //System.out.print(eb[i] + " ");
+                    out.write((int)eb[i]);
                 }
+                //System.out.println("\n");
             }
             //Close the input stream
             in.close();
@@ -125,97 +131,121 @@ public class Encrypt {
         }
     }
     
-    private byte[] encryptBytes(byte[] b, int p, int q, int n, int e, int d)
+    private int[] encryptBytes(int[] b, int p, int q, int n, int e, int d)
     {
-        byte[] eb = new byte[3];
+        int[] eb = new int[3];
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
         //System.out.println("source:    " + source);
         //System.out.println("source:    " + String.format("%24s",Integer.toBinaryString(source)).replace(' ','0'));
+        
+        //System.out.println(source);
         
         int encrypted = modPower(source, e, n);
         //System.out.println("encrypted: " + encrypted);
         //System.out.println("encrypted: " + String.format("%24s",Integer.toBinaryString(encrypted)).replace(' ','0'));
         
-        eb[2] = (byte) (encrypted % 256);
+        //System.out.println(encrypted + "\n");
+        
+        eb[2] = /*(byte)*/ (encrypted % 256);
         encrypted = encrypted >> 8;
-        eb[1] = (byte) (encrypted % 256);
+        eb[1] = /*(byte)*/ (encrypted % 256);
         encrypted = encrypted >> 8;
-        eb[0] = (byte) encrypted;
+        eb[0] = /*(byte)*/ encrypted;
+        
+        
+        /*for(int i = 0; i < 3; i ++)
+        {
+            //System.out.print(String.format("%8s",Integer.toBinaryString(eb[i])).replace(' ','0'));
+            System.out.print(eb[i] + " ");
+        }
+        System.out.println();*/
         
         return eb;
     }
     
-    private byte[] decryptBytes(byte[] b, int p, int q, int n, int e, int d)
+    private int[] decryptBytes(int[] b, int p, int q, int n, int e, int d)
     {
-        byte[] db = new byte[3];
+        int[] db = new int[3];
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
+        
         //System.out.println("source:    " + source);
         //System.out.println("source:    " + String.format("%24s",Integer.toBinaryString(source)).replace(' ','0'));
         
         int decrypted = modPower(source, d, n);
-        //System.out.println("encrypted: " + encrypted);
-        //System.out.println("encrypted: " + String.format("%24s",Integer.toBinaryString(encrypted)).replace(' ','0'));
+        //System.out.println("decrypted: " + decrypted);
+        //System.out.println(/*"decrypted: " + */String.format("%24s",Integer.toBinaryString(decrypted)).replace(' ','0'));
         
-        db[2] = (byte) (decrypted % 256);
+        db[2] = /*(byte)*/ (decrypted % 256);
         decrypted = decrypted >> 8;
-        db[1] = (byte) (decrypted % 256);
+        db[1] = /*(byte)*/ (decrypted % 256);
         decrypted = decrypted >> 8;
-        db[0] = (byte) decrypted;
+        db[0] = /*(byte)*/ decrypted;
+        
+        /*for(int i = 0; i < 3; i ++)
+        {
+            //System.out.print(String.format("%8s",Integer.toBinaryString(db[i])).replace(' ','0'));
+            //System.out.print(db[i] + " ");
+            System.out.print((char)db[i]);
+        }
+        System.out.println();*/
+        
+        
         
         return db;
     }
     
-    private void CRTPrecompile(int p, int q, int d)
+    private void CRTPrecompile(int p, int q, int e, int d)
     {
-        ep = d % (p - 1);
-        eq = d % (q - 1);
+        dp = d % (p - 1);
+        dq = d % (q - 1);
         BigInteger bigP = new BigInteger(p+"");
         BigInteger bigQ = new BigInteger(q+"");
-        pinv = bigQ.modInverse(bigP).intValue();
+        qinv = bigQ.modInverse(bigP).intValue();
         
-        ep = d % (p - 1);
-        eq = d % (q - 1);
-        qinv = bigP.modInverse(bigQ).intValue();
+        ep = e % (p - 1);
+        eq = e % (q - 1);
+        pinv = bigP.modInverse(bigQ).intValue();
     }
     
-    private byte[] CRTEncrypt(byte[] b, int p, int q, int n, int e, int d)
+    private int[] CRTEncrypt(int[] b, int p, int q, int n, int e, int d)
     {
-        byte[] db = new byte[3];
+        int[] db = new int[3];
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
         
         int c1 = modPower(source, ep, p);
         int c2 = modPower(source, eq, q);
         int h = (pinv * (c1 + p - c2)) % p;
-        int encrypted = (c2 + h) % q; 
+        int encrypted = c2 + h * q; 
         
-        db[2] = (byte) (encrypted % 256);
+        db[2] = /*(byte)*/ (encrypted % 256);
         encrypted = encrypted >> 8;
-        db[1] = (byte) (encrypted % 256);
+        db[1] = /*(byte)*/ (encrypted % 256);
         encrypted = encrypted >> 8;
-        db[0] = (byte) encrypted;
+        db[0] = /*(byte)*/ encrypted;
         
         return db;
     }
     
-    private byte[] CRTDecrypt(byte[] b, int p, int q, int n, int e, int d)
+    private int[] CRTDecrypt(int[] b, int p, int q, int n, int e, int d)
     {
-        byte[] db = new byte[3];
+        int[] db = new int[3];
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
         
         int m1 = modPower(source, dp, p);
         int m2 = modPower(source, dq, q);
         int h = (qinv * (m1 + p - m2)) % p;
-        int decrypted = (m2 + h) % q; 
+        System.out.println(-304 % 61);
+        int decrypted = m2 + h * q; 
         
-        db[2] = (byte) (decrypted % 256);
+        db[2] = /*(byte)*/ (decrypted % 256);
         decrypted = decrypted >> 8;
-        db[1] = (byte) (decrypted % 256);
+        db[1] = /*(byte)*/ (decrypted % 256);
         decrypted = decrypted >> 8;
-        db[0] = (byte) decrypted;
+        db[0] = /*(byte)*/ decrypted;
         
         return db;
     }
@@ -223,7 +253,7 @@ public class Encrypt {
     private int modPower(int base, int exponent, int modulus)
     {
         double result = 1;
-        for(int exp = 1; exp < exponent; exp++)
+        for(int exp = 1; exp <= exponent; exp++)
         {
             result = (result * base);
             result = result % modulus;
