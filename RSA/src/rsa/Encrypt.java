@@ -217,8 +217,8 @@ public class Encrypt {
         
         int c1 = modPower(source, ep, p);
         int c2 = modPower(source, eq, q);
-        int h = (pinv * (c1 + p - c2)) % p;
-        int encrypted = c2 + h * q; 
+        int h = (pinv * (c2 + p - c1)) % p;
+        int encrypted = c2 + h * p; 
         
         db[2] = /*(byte)*/ (encrypted % 256);
         encrypted = encrypted >> 8;
@@ -238,7 +238,6 @@ public class Encrypt {
         int m1 = modPower(source, dp, p);
         int m2 = modPower(source, dq, q);
         int h = (qinv * (m1 + p - m2)) % p;
-        System.out.println(-304 % 61);
         int decrypted = m2 + h * q; 
         
         db[2] = /*(byte)*/ (decrypted % 256);
