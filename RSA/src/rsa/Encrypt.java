@@ -217,8 +217,8 @@ public class Encrypt {
         
         int c1 = modPower(source, ep, p);
         int c2 = modPower(source, eq, q);
-        int h = (pinv * (c2 + p - c1)) % p;
-        int encrypted = c2 + h * p; 
+        int h = (qinv * (c1 + p - c2)) % p;
+        int encrypted = c2 + h * q; 
         
         db[2] = /*(byte)*/ (encrypted % 256);
         encrypted = encrypted >> 8;
