@@ -1,7 +1,3 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package rsa;
 
 import java.io.BufferedReader;
@@ -11,10 +7,6 @@ import java.io.FileOutputStream;
 import java.io.InputStreamReader;
 import java.math.BigInteger;
 
-/**
- *
- * @author crapson
- */
 public class Encrypt {
     
     private NotificationFrame nf = new NotificationFrame();
@@ -38,6 +30,8 @@ public class Encrypt {
             BufferedReader br = new BufferedReader(new InputStreamReader(in));
             
             String outputFile = "";
+            
+            //Change the output file's name depending on whether we are encrypting or decrypting
             if(encrypt)
             {
                 String f = sourceFile.split("/")[sourceFile.split("/").length - 1];
@@ -60,10 +54,6 @@ public class Encrypt {
             int[] eb = new int[3];
             //Count bytes in case number of bytes in file is 
             int byteCount;
-            
-            /*p = 61;
-            q = 53;
-            d = 2753;*/
             
             if(crt)
             {
@@ -122,7 +112,24 @@ public class Encrypt {
             
             long endTime = System.nanoTime();
             
-            String notification = "Execution time: " + ((endTime - startTime)/ 1000000000.0) + " seconds\n";
+            String notification = "";
+            if(encrypt)
+            {
+                notification = notification + "Encrypted " + sourceFile + " to " + outputFile;
+            }
+            else
+            {
+                notification = notification + "Decrypted " + sourceFile + " to " + outputFile;
+            }
+            if(crt)
+            {
+                notification = notification + " using the Chinese Remainder Theorem.\n";
+            }
+            else
+            {
+                notification = notification + "\n";
+            }
+            notification = notification + "Execution time: " + ((endTime - startTime)/ 1000000000.0) + " seconds\n";
             nf.setNotification(notification);
         }
         catch (Exception exception){//Catch exception if any
@@ -136,30 +143,14 @@ public class Encrypt {
         int[] eb = new int[3];
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
-        //System.out.println("source:    " + source);
-        //System.out.println("source:    " + String.format("%24s",Integer.toBinaryString(source)).replace(' ','0'));
-        
-        //System.out.println(source);
         
         int encrypted = modPower(source, e, n);
-        //System.out.println("encrypted: " + encrypted);
-        //System.out.println("encrypted: " + String.format("%24s",Integer.toBinaryString(encrypted)).replace(' ','0'));
         
-        //System.out.println(encrypted + "\n");
-        
-        eb[2] = /*(byte)*/ (encrypted % 256);
+        eb[2] = (encrypted % 512);
         encrypted = encrypted >> 8;
-        eb[1] = /*(byte)*/ (encrypted % 256);
+        eb[1] = (encrypted % 512);
         encrypted = encrypted >> 8;
-        eb[0] = /*(byte)*/ encrypted;
-        
-        
-        /*for(int i = 0; i < 3; i ++)
-        {
-            //System.out.print(String.format("%8s",Integer.toBinaryString(eb[i])).replace(' ','0'));
-            System.out.print(eb[i] + " ");
-        }
-        System.out.println();*/
+        eb[0] = encrypted;
         
         return eb;
     }
@@ -170,29 +161,14 @@ public class Encrypt {
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
         
-        //System.out.println("source:    " + source);
-        //System.out.println("source:    " + String.format("%24s",Integer.toBinaryString(source)).replace(' ','0'));
-        
         int decrypted = modPower(source, d, n);
-        //System.out.println("decrypted: " + decrypted);
-        //System.out.println(/*"decrypted: " + */String.format("%24s",Integer.toBinaryString(decrypted)).replace(' ','0'));
         
-        db[2] = /*(byte)*/ (decrypted % 256);
+        db[2] = (decrypted % 512);
         decrypted = decrypted >> 8;
-        db[1] = /*(byte)*/ (decrypted % 256);
+        db[1] = (decrypted % 512);
         decrypted = decrypted >> 8;
-        db[0] = /*(byte)*/ decrypted;
-        
-        /*for(int i = 0; i < 3; i ++)
-        {
-            //System.out.print(String.format("%8s",Integer.toBinaryString(db[i])).replace(' ','0'));
-            //System.out.print(db[i] + " ");
-            System.out.print((char)db[i]);
-        }
-        System.out.println();*/
-        
-        
-        
+        db[0] = decrypted;
+     
         return db;
     }
     
@@ -220,11 +196,11 @@ public class Encrypt {
         int h = (qinv * (c1 + p - c2)) % p;
         int encrypted = c2 + h * q; 
         
-        db[2] = /*(byte)*/ (encrypted % 256);
+        db[2] = encrypted & 0xFF;//(encrypted % 512);
         encrypted = encrypted >> 8;
-        db[1] = /*(byte)*/ (encrypted % 256);
+        db[1] = encrypted & 0xFF;//(encrypted % 512);
         encrypted = encrypted >> 8;
-        db[0] = /*(byte)*/ encrypted;
+        db[0] = encrypted;
         
         return db;
     }
@@ -240,11 +216,11 @@ public class Encrypt {
         int h = (qinv * (m1 + p - m2)) % p;
         int decrypted = m2 + h * q; 
         
-        db[2] = /*(byte)*/ (decrypted % 256);
+        db[2] = decrypted & 0xFF;//(decrypted % 512);
         decrypted = decrypted >> 8;
-        db[1] = /*(byte)*/ (decrypted % 256);
+        db[1] = decrypted & 0xFF;//(decrypted % 512);
         decrypted = decrypted >> 8;
-        db[0] = /*(byte)*/ decrypted;
+        db[0] = decrypted;
         
         return db;
     }
@@ -255,6 +231,10 @@ public class Encrypt {
         for(int exp = 1; exp <= exponent; exp++)
         {
             result = (result * base);
+            if(result == 2147483647)
+            {
+                System.out.println("woops");
+            }
             result = result % modulus;
         }
         

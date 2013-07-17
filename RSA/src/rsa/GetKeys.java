@@ -1,16 +1,8 @@
-/*
- * To change this template, choose Tools | Templates
- * and open the template in the editor.
- */
 package rsa;
 
 import java.math.BigInteger;
 import java.util.Random;
 
-/**
- *
- * @author crapson
- */
 public class GetKeys {
     
     private static GetKeys instance = null;
@@ -43,8 +35,6 @@ public class GetKeys {
         }
         else
         {
-            //System.out.println("p is " + Integer.toBinaryString(p).length() + " bits");
-            //System.out.println("q is " + Integer.toBinaryString(q).length() + " bits");
 
             System.out.println("p: " + String.format("%12s",Integer.toBinaryString(p)).replace(' ','0'));
             System.out.println("q: " + String.format("%12s",Integer.toBinaryString(q)).replace(' ','0'));
@@ -150,13 +140,10 @@ public class GetKeys {
             */
             
             //Find possible e's
-            //e must have no common divisors as product
-            System.out.println("e: " + e);
-            
+            //e must have no common divisors as product 
             if(e != -1)
             {
                 boolean relativelyPrime = true;
-                //System.out.println("i: " + i + "; product % i: " + product % i);
                 if(product % e == 0)
                 {
                     relativelyPrime = false;
@@ -188,7 +175,6 @@ public class GetKeys {
                 for(int i = rand.nextInt(product); i <= product; i ++)
                 {
                     relativelyPrime = true;
-                    //System.out.println("i: " + i + "; product % i: " + product % i);
                     if(product % i == 0)
                     {
                         relativelyPrime = false;
@@ -230,6 +216,7 @@ public class GetKeys {
         BigInteger bigProduct = new BigInteger(product+"");
         int d = bigE.modInverse(bigProduct).intValue();
         
+        System.out.println("d: " + d + " other d: " + e % product);
         PrimaryFrame.getInstance().setValues(p, q, n, e, d);
     }
 }
