@@ -172,7 +172,7 @@ public class GetKeys {
             {
                 boolean relativelyPrime;
                 Random rand = new Random();
-                for(int i = rand.nextInt(product); i <= product; i ++)
+                for(int i = rand.nextInt(100); i <= product; i ++)
                 {
                     relativelyPrime = true;
                     if(product % i == 0)
@@ -215,8 +215,8 @@ public class GetKeys {
         BigInteger bigE = new BigInteger(e+"");
         BigInteger bigProduct = new BigInteger(product+"");
         int d = bigE.modInverse(bigProduct).intValue();
-        
-        System.out.println("d: " + d + " other d: " + e % product);
+        System.out.println("e: " + e);
+        System.out.println("d: " + d);
         PrimaryFrame.getInstance().setValues(p, q, n, e, d);
     }
 }

@@ -27,7 +27,6 @@ public class Encrypt {
             FileInputStream fstream = new FileInputStream(sourceFile);
             // Get the object of DataInputStream
             DataInputStream in = new DataInputStream(fstream);
-            BufferedReader br = new BufferedReader(new InputStreamReader(in));
             
             String outputFile = "";
             
@@ -80,6 +79,7 @@ public class Encrypt {
                 {
                     if(crt)
                     {
+                        System.out.println("here");
                         eb = CRTEncrypt(b, p, q, n, e, d);
                     }
                     else
@@ -102,7 +102,7 @@ public class Encrypt {
                 for(int i = 0; i < byteCount; i++)
                 {
                     //System.out.print(eb[i] + " ");
-                    out.write((int)eb[i]);
+                    out.write(eb[i]);
                 }
                 //System.out.println("\n");
             }
@@ -144,13 +144,15 @@ public class Encrypt {
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
         
-        int encrypted = modPower(source, e, n);
+        int encrypted = (int)modPower(source, e, n);
+        System.out.println(source);
         
-        eb[2] = (encrypted % 512);
+        eb[2] = (encrypted % 256);
         encrypted = encrypted >> 8;
-        eb[1] = (encrypted % 512);
+        eb[1] = (encrypted % 256);
         encrypted = encrypted >> 8;
         eb[0] = encrypted;
+        decryptBytes(eb,p,q,n,e,d);
         
         return eb;
     }
@@ -161,11 +163,12 @@ public class Encrypt {
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
         
-        int decrypted = modPower(source, d, n);
+        int decrypted = (int)modPower(source, d, n);
+        System.out.println(decrypted+"\n");
         
-        db[2] = (decrypted % 512);
+        db[2] = (decrypted % 256);
         decrypted = decrypted >> 8;
-        db[1] = (decrypted % 512);
+        db[1] = (decrypted % 256);
         decrypted = decrypted >> 8;
         db[0] = decrypted;
      
@@ -187,22 +190,22 @@ public class Encrypt {
     
     private int[] CRTEncrypt(int[] b, int p, int q, int n, int e, int d)
     {
-        int[] db = new int[3];
+        int[] eb = new int[3];
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
         
-        int c1 = modPower(source, ep, p);
-        int c2 = modPower(source, eq, q);
+        int c1 = (int)modPower(source, ep, p);
+        int c2 = (int)modPower(source, eq, q);
         int h = (qinv * (c1 + p - c2)) % p;
         int encrypted = c2 + h * q; 
         
-        db[2] = encrypted & 0xFF;//(encrypted % 512);
+        eb[2] = (encrypted % 256);
         encrypted = encrypted >> 8;
-        db[1] = encrypted & 0xFF;//(encrypted % 512);
+        eb[1] = (encrypted % 256);
         encrypted = encrypted >> 8;
-        db[0] = encrypted;
+        eb[0] = encrypted;
         
-        return db;
+        return eb;
     }
     
     private int[] CRTDecrypt(int[] b, int p, int q, int n, int e, int d)
@@ -211,34 +214,30 @@ public class Encrypt {
         
         int source = (b[0] << 16) + (b[1] << 8) + b[2];
         
-        int m1 = modPower(source, dp, p);
-        int m2 = modPower(source, dq, q);
+        int m1 = (int)modPower(source, dp, p);
+        int m2 = (int)modPower(source, dq, q);
         int h = (qinv * (m1 + p - m2)) % p;
         int decrypted = m2 + h * q; 
         
-        db[2] = decrypted & 0xFF;//(decrypted % 512);
+        db[2] = (decrypted % 256);
         decrypted = decrypted >> 8;
-        db[1] = decrypted & 0xFF;//(decrypted % 512);
+        db[1] = (decrypted % 256);
         decrypted = decrypted >> 8;
         db[0] = decrypted;
         
         return db;
     }
     
-    private int modPower(int base, int exponent, int modulus)
+    private double modPower(int base, int exponent, int modulus)
     {
         double result = 1;
         for(int exp = 1; exp <= exponent; exp++)
         {
             result = (result * base);
-            if(result == 2147483647)
-            {
-                System.out.println("woops");
-            }
             result = result % modulus;
         }
         
-        return (int) result;
+        return result;
     }
     
 }
